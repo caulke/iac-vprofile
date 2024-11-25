@@ -1,30 +1,27 @@
-name: "vprofile IAC"
-
+name: "Vprofile IAC"
 on:
   push:
     branches:
       - main
       - stage
     paths:
-      - 'terraform/**'
+      - terraform/**
   pull_request:
     branches:
       - main
     paths:
-      - 'terraform/**'
+      - terraform/**
 
 env:
-  # credentials for deployment to AWS
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  # S3 bucket for the Terraform state
   BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
-  AWS_REGION: us-east-1
-  EKS_CLUSTER: kels-eks
+  AWS_REGION: us-east-2
+  EKS_CLUSTER: vprofile-eks
 
 jobs:
   terraform:
-    name: "Apply terraform code changes"
+    name: "Apply Terraform Code Changes"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,17 +30,16 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Terraform with specified version on the runner
         uses: hashicorp/setup-terraform@v2
-
         with:
-          terraform_version: '1.6.3' 
+          terraform_version: 1.6.3
 
       - name: Terraform init
         id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE }}"
+        run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
 
       - name: Terraform format
         id: fmt
@@ -59,5 +55,5 @@ jobs:
         continue-on-error: true
 
       - name: Terraform plan status
-        if: steps.plan.outcome == 'failure'
+        if: failure()
         run: exit 1
