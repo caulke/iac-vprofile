@@ -26,17 +26,11 @@ terraform {
     }
   }
 
- backend "s3" {
+  backend "s3" {
     bucket         = "pamy-s3-bucket"
     key            = "env/state"
-    region         = "us-west-2"
-    access_key     = AWS_ACCESS_KEY_ID
-    secret_key     = AWS_SECRET_ACCESS_KEY
+    region         = "us-east-2"
   }
-
 
   required_version = "~> 1.6.3"
 }
-##
-##
-##
