@@ -26,11 +26,14 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket = "pamy-s3-bucket"
-    key    = "terraform.tfstate"
-    region = "us-west-2"
+ backend "s3" {
+    bucket         = "your-bucket-name"
+    key            = "path/to/terraform/state"
+    region         = "us-east-2"
+    access_key     = var.AWS_ACCESS_KEY_ID
+    secret_key     = var.AWS_SECRET_ACCESS_KEY
   }
+
 
   required_version = "~> 1.6.3"
 }
