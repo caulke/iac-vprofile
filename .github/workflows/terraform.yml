@@ -66,10 +66,10 @@ jobs:
         run: exit 1
 
       - name: Terraform destroy
-        id: destroy
+        id: always ()
         # if: github.ref == 'success' && github.event_name == 'push'
-        run: terraform destroy -auto-approve -input=false -parallelism=1 planfile
-
+        run: terraform destroy -auto-approve -input=false
+        
       - name: Get Kube config file
         id: getconfig
         if: steps.apply.outcome == 'success'
