@@ -27,9 +27,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "pamy-s3-bucket"
+    bucket         = "kelvin-pamy1"
     key            = "env/state"
-    region         = "us-west-2"
+    region         = "us-east-2"
   }
 
   required_version = "~> 1.6.3"
