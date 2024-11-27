@@ -1,4 +1,4 @@
-name: "Vprofile IAC"
+name: "Gitops"
 
 on:
   workflow_dispatch:
@@ -65,10 +65,10 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      - name: Terraform destroy
-        if: always ()
+      - name: Apply
+        if: Apply
         # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform destroy -auto-approve -input=false 
+        run: terraform destroy -auto-approve -input=false -parallelism=1 planfile
 
       - name: Get Kube config file
         id: getconfig
