@@ -28,7 +28,7 @@ terraform {
 
  backend "s3" {
     bucket         = "kelvin-pamy1"
-    key            = "en/state"
+    key            = "test/state"
     region         = "us-east-2"
     access_key     = AWS_ACCESS_KEY_ID
     secret_key     = AWS_SECRET_ACCESS_KEY
