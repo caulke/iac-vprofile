@@ -19,13 +19,13 @@ on:
       - terraform/**
 
 env:
- # Credentials for deployment to AWS
- AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
- AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
- # S3 bucket for the Terraform state
- BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE}}
- AWS_REGION: us-east-2
- EKS_CLUSTER: vprofile-eks
+  # Credentials for deployment to AWS
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  # S3 bucket for the Terraform state
+  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
+  AWS_REGION: us-east-2
+  EKS_CLUSTER: vprofile-eks
 
 jobs:
   terraform:
@@ -37,56 +37,72 @@ jobs:
         working-directory: ./terraform
 
     steps:
-      - name: Checkout source code
+      # Step 1: Checkout source code
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      # Step 2: Configure AWS Credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # Step 3: Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.3
 
-      - name: Terraform init
+      # Step 4: Initialize Terraform
+      - name: Terraform Init
         id: init
-        run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.BUCKET_TF_STATE }}" \
+            -backend-config="key=terraform/state" \
+            -backend-config="region=${{ env.AWS_REGION }}"
 
-      - name: Terraform format
+      # Step 5: Format Terraform Files
+      - name: Terraform Format
         id: fmt
         run: terraform fmt
 
-      - name: Terraform validate
+      # Step 6: Validate Terraform Files
+      - name: Terraform Validate
         id: validate
         run: terraform validate
 
-      - name: Terraform plan
+      # Step 7: Create Terraform Plan
+      - name: Terraform Plan
         id: plan
         run: terraform plan -no-color -input=false -out planfile
         continue-on-error: true
 
-      - name: Terraform plan status
+      # Step 8: Check Terraform Plan Status
+      - name: Terraform Plan Status Check
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
+      # Step 9: Apply Terraform Plan (Only for pushes)
       - name: Terraform Apply
         id: apply
-        # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        # if: github.event_name == 'push'
         run: terraform apply -auto-approve -input=false -parallelism=1 planfile
 
-      - name: Get Kube config file
+      # Step 10: Get kubeconfig for EKS
+      - name: Get Kubeconfig File
         id: getconfig
         if: steps.apply.outcome == 'success'
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER }}
 
-      - name: Install Ingress controller
+      # Step 11: Install Ingress Controller
+      - name: Install Ingress Controller
         if: steps.apply.outcome == 'success' && steps.getconfig.outcome == 'success'
         run: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.3/deploy/static/provider/aws/deploy.yaml
 
+      # Step 12: Destroy Terraform Resources (Triggered by Workflow Dispatch)
       - name: Terraform Destroy
-        if: github.event.inputs.confirm == 'destroy'
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'destroy'
         run: terraform destroy -auto-approve -input=false
