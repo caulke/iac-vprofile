@@ -86,10 +86,10 @@ jobs:
         run: exit 1
 
       # Step 9: Apply Terraform Plan (Only for pushes)
-      - name: Terraform destroy
-        if: always ()
+      - name: Terraform apply
+        id: apply
         # if: github.event_name == 'push'
-        run: terraform destroy -auto-approve -input=false 
+        run: terraform destroy -auto-approve -input=false -parallelism=1 planfile
 
       # Step 10: Get kubeconfig for EKS
       - name: Get Kubeconfig File
