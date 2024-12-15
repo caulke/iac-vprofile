@@ -89,7 +89,7 @@ jobs:
       - name: Terraform apply
         id: apply
         # if: github.event_name == 'push'
-        run: terraform destroy -auto-approve -input=false -parallelism=1 planfile
+        run: terraform apply -auto-approve -input=false -parallelism=1 planfile
 
       # Step 10: Get kubeconfig for EKS
       - name: Get Kubeconfig File
