@@ -26,7 +26,7 @@ module "eks" {
     }
 
     two = {
-      name = "node-group-2"
+      name = "node-group-1"
 
       instance_types = ["t3.small"]
 
